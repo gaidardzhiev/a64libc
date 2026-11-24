@@ -1,0 +1,25 @@
+#!/bin/sh
+# Copyright (C) 2026 Ivan Gaydardzhiev
+# Licensed under the GPL-3.0-only
+#
+# a64libc-gcc prog.c -o prog     compile and link a static program against a64libc
+# REALCC overrides the compiler (gcc or clang), A64LIBC the install prefix.
+
+P=${A64LIBC:-/opt/a64libc}
+CC=${REALCC:-gcc}
+
+# the compiler's own freestanding headers (stdarg.h, stdbool.h, limits.h)
+inc=$($CC -print-file-name=include 2>/dev/null)
+[ -d "$inc" ] || inc=$($CC -print-resource-dir 2>/dev/null)/include
+
+F="-nostdlib -nostdinc -isystem $inc -I $P/include -ffreestanding -fno-builtin \
+-fno-stack-protector -fno-asynchronous-unwind-tables -fno-pie -Os"
+
+for a; do
+	case $a in
+	-c|-S|-E) exec $CC $F "$@" ;;
+	esac
+done
+
+exec $CC $F -static -no-pie -Wno-unused-command-line-argument -Wl,-z,max-page-size=0x10000 \
+	-T "$P/lib/a64libc.ld" "$P/lib/crt0.o" "$@" "$P/lib/a64libc.a"

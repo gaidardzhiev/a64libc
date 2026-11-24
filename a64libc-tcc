@@ -1,0 +1,22 @@
+#!/bin/sh
+# Copyright (C) 2026 Ivan Gaydardzhiev
+# Licensed under the GPL-3.0-only
+#
+# a64libc-tcc prog.c [-o prog]   compile one file with tcc and link with ld
+# REALTCC and REALLD override the tools, A64LIBC the install prefix.
+
+P=${A64LIBC:-/opt/a64libc}
+TCC=${REALTCC:-tcc}
+LD=${REALLD:-ld}
+
+IN=$1
+OUT=a.out
+[ "$2" = -o ] && OUT=$3
+[ -n "$IN" ] || { echo "usage: a64libc-tcc prog.c [-o prog]" >&2; exit 1; }
+
+T=$(mktemp -d) || exit 1
+trap 'rm -rf "$T"' EXIT INT TERM
+
+$TCC -nostdlib -nostdinc -I "$P/include" -c "$IN" -o "$T/prog.o" || exit 1
+$LD -static -z max-page-size=0x10000 -T "$P/lib/a64libc.ld" \
+	"$P/lib/crt0.o" "$T/prog.o" "$P/lib/a64libc.a" -o "$OUT"

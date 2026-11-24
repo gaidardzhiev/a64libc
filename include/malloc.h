@@ -1,0 +1,13 @@
+/*
+ * Copyright (C) 2026 Ivan Gaydardzhiev
+ * Licensed under the GPL-3.0-only
+ */
+
+#ifndef _A64LIBC_MALLOC_H
+#define _A64LIBC_MALLOC_H
+#include "stddef.h"
+extern void *malloc(size_t size);
+extern void free(void *ptr);
+extern void *calloc(size_t nmemb, size_t size);
+extern void *realloc(void *ptr, size_t size);
+#endif
